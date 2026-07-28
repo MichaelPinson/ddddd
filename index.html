@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UCB1 + 쿼터 하이브리드 | 대학 입시 공리주의 시뮬레이션</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --card: #ffffff;
+      --ink: #17233d;
+      --muted: #65728a;
+      --blue: #3569e8;
+      --purple: #7c4dff;
+      --green: #18a66a;
+      --orange: #f28b36;
+      --red: #e65b62;
+      --line: #dfe6f3;
+      --shadow: 0 10px 28px rgba(28, 52, 92, .09);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--bg);
+      font-family: "Pretendard", "Noto Sans KR", Arial, sans-serif;
+    }
+
+    header {
+      color: white;
+      padding: 38px max(24px, calc((100% - 1180px) / 2));
+      background: linear-gradient(120deg, #152b63, #315ee0 56%, #744be1);
+    }
+
+    .eyebrow {
+      margin-bottom: 10px;
+      color: #bcd0ff;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: .08em;
+    }
+
+    h1 { margin: 0; font-size: clamp(25px, 4vw, 40px); }
+    header p {
+      max-width: 830px;
+      margin: 14px 0 0;
+      color: #e3ebff;
+      line-height: 1.7;
+      font-size: 16px;
+    }
+
+    main {
+      max-width: 1180px;
+      padding: 26px 20px 54px;
+      margin: auto;
+    }
+
+    .notice {
+      display: flex;
+      gap: 13px;
+      padding: 15px 18px;
+      margin-bottom: 22px;
+      border: 1px solid #dce6ff;
+      border-radius: 14px;
+      color: #25467e;
+      background: #edf3ff;
+      line-height: 1.65;
+      font-size: 14px;
+    }
+    .notice strong { color: #183c87; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1.55fr .95fr;
+      gap: 20px;
+    }
+
+    .card {
+      padding: 21px;
+      border: 1px solid #e6ebf4;
+      border-radius: 18px;
+      background: var(--card);
+      box-shadow: var(--shadow);
+    }
+
+    .card h2, .card h3 { margin: 0; }
+    .card h2 { font-size: 20px; }
+    .card h3 { font-size: 16px; }
+
+    .sub {
+      margin: 7px 0 18px;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 13px;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 9px;
+      padding-bottom: 17px;
+      margin-bottom: 17px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    button {
+      padding: 10px 14px;
+      border: 0;
+      border-radius: 9px;
+      color: white;
+      background: var(--blue);
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform .15s, filter .15s;
+    }
+    button:hover { filter: brightness(1.07); transform: translateY(-1px); }
+    button.secondary { color: #3d4a64; background: #e9eef7; }
+    button.step { background: var(--purple); }
+
+    .speed {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-left: auto;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+    input[type="range"] { accent-color: var(--blue); width: 110px; }
+
+    .status {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .stat {
+      min-height: 78px;
+      padding: 13px;
+      border-radius: 12px;
+      background: #f7f9fd;
+    }
+    .stat b {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+    .stat strong { font-size: 22px; }
+    .stat.highlight { color: #5b38ca; background: #f1edff; }
+    .stat.highlight b { color: #7359bd; }
+
+    .current-event {
+      min-height: 74px;
+      padding: 15px 16px;
+      border-left: 5px solid var(--blue);
+      border-radius: 10px;
+      background: #f4f7ff;
+      line-height: 1.65;
+      font-size: 14px;
+    }
+    .current-event.quota { border-left-color: var(--orange); background: #fff7ed; }
+    .current-event b { color: #244cae; }
+    .current-event.quota b { color: #b55d14; }
+
+    .topic-list {
+      display: grid;
+      gap: 9px;
+      margin-top: 17px;
+    }
+    .topic-row {
+      display: grid;
+      grid-template-columns: 118px 1fr 70px;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+    }
+    .topic-name { font-weight: 800; }
+    .bar {
+      overflow: hidden;
+      height: 10px;
+      border-radius: 20px;
+      background: #e8edf6;
+    }
+    .bar i {
+      display: block;
+      width: 0%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #4d7cf3, #8b66ed);
+      transition: width .35s;
+    }
+    .topic-row small { color: var(--muted); text-align: right; }
+
+    .algorithm {
+      display: grid;
+      gap: 12px;
+    }
+    .formula {
+      padding: 14px;
+      border-radius: 12px;
+      color: #263961;
+      background: #f3f6fc;
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.8;
+    }
+
+    .rule {
+      display: grid;
+      grid-template-columns: 31px 1fr;
+      gap: 10px;
+      align-items: start;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .rule:last-child { border-bottom: 0; }
+    .rule-number {
+      display: grid;
+      width: 28px;
+      height: 28px;
+      place-items: center;
+      border-radius: 50%;
+      color: white;
+      background: var(--blue);
+      font-size: 13px;
+      font-weight: 900;
+    }
+    .rule p { margin: 3px 0 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
+
+    .bottom {
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 230px;
+      margin-top: 12px;
+      border-radius: 11px;
+      background: #fbfcff;
+    }
+
+    .admission-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 11px;
+    }
+    .admission-item {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+    }
+    .admission-item span {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .admission-item strong { font-size: 20px; }
+    .admission-item.full { grid-column: 1 / -1; }
+    .admission-item.orange { border-color: #ffd8ae; background: #fff9f2; }
+    .admission-item.green { border-color: #cdeedc; background: #f3fcf7; }
+
+    .meaning {
+      padding: 16px;
+      margin-top: 15px;
+      border-radius: 12px;
+      background: #f4f0ff;
+      color: #45337c;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .log {
+      overflow: auto;
+      max-height: 290px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .log li {
+      display: grid;
+      grid-template-columns: 46px 1fr auto;
+      gap: 9px;
+      padding: 10px 1px;
+      border-bottom: 1px solid var(--line);
+      color: #4d5a71;
+      font-size: 13px;
+    }
+    .log li:last-child { border: 0; }
+    .log .turn { color: #8090aa; font-weight: 800; }
+    .badge {
+      align-self: center;
+      padding: 3px 7px;
+      border-radius: 20px;
+      color: #325cc6;
+      background: #e9f0ff;
+      font-size: 11px;
+      font-weight: 900;
+    }
+    .badge.quota { color: #ae5913; background: #fff0df; }
+
+    @media (max-width: 850px) {
+      .layout, .bottom { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 520px) {
+      .status { grid-template-columns: 1fr 1fr; }
+      .topic-row { grid-template-columns: 90px 1fr 58px; }
+      .speed { width: 100%; margin-left: 0; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="eyebrow">AI RECOMMENDATION × COLLEGE ADMISSION ETHICS</div>
+    <h1>UCB1 + 쿼터 하이브리드: 효용을 높이고 기회를 넓히는 추천</h1>
+    <p>
+      클릭과 시청 시간을 바탕으로 만족도가 높은 주제를 추천하되, 20회마다 덜 노출된 새 주제를 의도적으로 추천합니다.
+      이를 대학 입시에 적용하면 전체 교육 효용을 고려하면서도 한 가지 전공·배경에 기회가 쏠리는 현상을 완화할 수 있습니다.
+    </p>
+  </header>
+
+  <main>
+    <div class="notice">
+      <div>💡</div>
+      <div>
+        <strong>공리주의적 관점:</strong> 많은 학생의 학습 만족도와 사회 전체의 효용 합계를 크게 만드는 것이 목표입니다.
+        단, 단기 성과만 좇으면 이미 인기 있는 전공·집단만 반복 선택될 수 있으므로, 쿼터가 새로운 가능성을 탐색할 최소 기회를 보장합니다.
+      </div>
+    </div>
+
+    <section class="layout">
+      <article class="card">
+        <h2>추천 시뮬레이션</h2>
+        <p class="sub">가상의 한 사용자가 각 주제를 접했을 때의 클릭 및 시청 데이터를 통해 보상(reward)을 계산합니다.</p>
+
+        <div class="controls">
+          <button id="playBtn">▶ 자동 실행</button>
+          <button id="stepBtn" class="step">한 번 추천</button>
+          <button id="resetBtn" class="secondary">초기화</button>
+          <label class="speed">
+            실행 속도
+            <input id="speedRange" type="range" min="250" max="1600" value="850" step="50">
+          </label>
+        </div>
+
+        <div class="status">
+          <div class="stat"><b>전체 추천 횟수</b><strong id="turnValue">0</strong></div>
+          <div class="stat"><b>누적 총효용</b><strong id="utilityValue">0.0</strong></div>
+          <div class="stat"><b>클릭률</b><strong id="ctrValue">0%</strong></div>
+          <div class="stat highlight"><b>다음 쿼터까지</b><strong id="quotaValue">20회</strong></div>
+        </div>
+
+        <div id="eventBox" class="current-event">
+          <b>시뮬레이션 준비 완료</b><br>
+          버튼을 눌러 첫 추천을 시작하세요. 모든 주제는 최소 1회씩 탐색한 뒤 UCB1 점수로 비교됩니다.
+        </div>
+
+        <div id="topicList" class="topic-list"></div>
+      </article>
+
+      <aside class="card">
+        <h2>알고리즘의 판단 과정</h2>
+        <p class="sub">UCB1은 현재 성과와 불확실성을 함께 평가합니다.</p>
+
+        <div class="algorithm">
+          <div class="formula">
+            UCB1 점수 = 평균 보상 + c × √(ln(전체 추천 수) / 해당 주제 추천 수)<br>
+            보상 = 0.55 × 클릭(0 또는 1) + 0.45 × 시청 비율
+          </div>
+
+          <div class="rule">
+            <div class="rule-number">1</div>
+            <div>
+              <strong>초기 탐색</strong>
+              <p>아직 추천하지 않은 주제는 우선 1회씩 제시해 기본 데이터를 얻습니다.</p>
+            </div>
+          </div>
+          <div class="rule">
+            <div class="rule-number">2</div>
+            <div>
+              <strong>UCB1 추천</strong>
+              <p>높은 반응을 보인 주제를 선호하지만, 데이터가 적어 불확실한 주제에도 탐색 보너스를 줍니다.</p>
+            </div>
+          </div>
+          <div class="rule">
+            <div class="rule-number">3</div>
+            <div>
+              <strong>20회 쿼터</strong>
+              <p>20번째 추천마다 가장 적게 노출된 주제를 강제로 선택합니다. 이것이 필터 버블을 끊는 안전장치입니다.</p>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="bottom">
+      <article class="card">
+        <h2>누적 효용 변화</h2>
+        <p class="sub">보상은 클릭 여부와 시청 시간의 결합값입니다. 그래프가 높을수록 사용자의 누적 만족(총효용)이 커집니다.</p>
+        <canvas id="chart" width="700" height="230"></canvas>
+      </article>
+
+      <article class="card">
+        <h2>대학 입시와의 연결</h2>
+        <p class="sub">추천의 ‘주제’를 대학의 ‘전공·학생 경로’, 보상을 ‘교육 및 사회 기여 효용’으로 바꾸어 생각할 수 있습니다.</p>
+
+        <div class="admission-grid">
+          <div class="admission-item green">
+            <span>예상 교육 총효용</span>
+            <strong id="admissionUtility">0점</strong>
+          </div>
+          <div class="admission-item">
+            <span>기회를 받은 경로 수</span>
+            <strong id="pathwayValue">0 / 6</strong>
+          </div>
+          <div class="admission-item orange full">
+            <span>쿼터로 확보한 탐색 기회</span>
+            <strong id="quotaCount">0회</strong>
+          </div>
+        </div>
+
+        <div class="meaning" id="meaningText">
+          아직 입학 자료가 없습니다. 추천을 실행하면 누적된 반응을 바탕으로 입시 공리주의 해석이 나타납니다.
+        </div>
+      </article>
+
+      <article class="card">
+        <h2>최근 추천 기록</h2>
+        <p class="sub">주황색 ‘쿼터’ 표시는 성과 순위와 무관하게 다양성을 위해 제공된 탐색 기회입니다.</p>
+        <ul class="log" id="logList">
+          <li><span class="turn">-</span><span>아직 기록이 없습니다.</span><span class="badge">대기</span></li>
+        </ul>
+      </article>
+    </section>
+  </main>
+
+  <script>
+    const topics = [
+      { name: "의학·보건", color: "#e65b62", affinity: 0.82 },
+      { name: "공학·AI", color: "#3569e8", affinity: 0.77 },
+      { name: "경영·경제", color: "#8a61e8", affinity: 0.62 },
+      { name: "인문·사회", color: "#f28b36", affinity: 0.48 },
+      { name: "예술·문화", color: "#e84f9a", affinity: 0.40 },
+      { name: "환경·농생명", color: "#18a66a", affinity: 0.35 }
+    ];
+
+    let state;
+    let timer = null;
+
+    const playBtn = document.getElementById("playBtn");
+    const stepBtn = document.getElementById("stepBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const speedRange = document.getElementById("speedRange");
+
+    function resetState() {
+      state = {
+        turn: 0,
+        clicks: 0,
+        totalReward: 0,
+        quotaCount: 0,
+        history: [],
+        topicData: topics.map(topic => ({
+          ...topic,
+          count: 0,
+          rewardSum: 0,
+          clickCount: 0,
+          watchSum: 0
+        }))
+      };
+      stopAuto();
+      render();
+    }
+
+    function ucbScore(item, totalTurns) {
+      if (item.count === 0) return Infinity;
+      const mean = item.rewardSum / item.count;
+      const exploration = 1.15 * Math.sqrt(Math.log(Math.max(totalTurns, 1)) / item.count);
+      return mean + exploration;
+    }
+
+    function chooseTopic() {
+      const nextTurn = state.turn + 1;
+      const isQuota = nextTurn % 20 === 0;
+
+      if (isQuota) {
+        const minCount = Math.min(...state.topicData.map(item => item.count));
+        const leastExposed = state.topicData.filter(item => item.count === minCount);
+        return {
+          item: leastExposed[Math.floor(Math.random() * leastExposed.length)],
+          isQuota: true
+        };
+      }
+
+      const unseen = state.topicData.filter(item => item.count === 0);
+      if (unseen.length > 0) {
+        return {
+          item: unseen[Math.floor(Math.random() * unseen.length)],
+          isQuota: false
+        };
+      }
+
+      const scored = state.topicData.map(item => ({
+        item,
+        score: ucbScore(item, state.turn)
+      }));
+      const best = Math.max(...scored.map(entry => entry.score));
+      const candidates = scored.filter(entry => Math.abs(entry.score - best) < 0.00001);
+      return {
+        item: candidates[Math.floor(Math.random() * candidates.length)].item,
+        isQuota: false
+      };
+    }
+
+    function recommendOnce() {
+      const choice = chooseTopic();
+      const item = choice.item;
+
+      // 주제 적합도가 높을수록 클릭과 시청 시간이 높아지도록 가상 행동 데이터를 생성
+      const clickProbability = Math.min(0.95, Math.max(0.08, item.affinity + (Math.random() - 0.5) * 0.24));
+      const clicked = Math.random() < clickProbability;
+      const watchRatio = Math.max(0.05, Math.min(1,
+        item.affinity * 0.72 + (clicked ? 0.22 : -0.08) + (Math.random() - 0.5) * 0.30
+      ));
+      const reward = (clicked ? 0.55 : 0) + 0.45 * watchRatio;
+
+      state.turn++;
+      state.totalReward += reward;
+      state.clicks += clicked ? 1 : 0;
+      state.quotaCount += choice.isQuota ? 1 : 0;
+
+      item.count++;
+      item.rewardSum += reward;
+      item.clickCount += clicked ? 1 : 0;
+      item.watchSum += watchRatio;
+
+      state.history.push({
+        turn: state.turn,
+        topic: item.name,
+        clicked,
+        watchRatio,
+        reward,
+        isQuota: choice.isQuota
+      });
+
+      render(choice.isQuota);
+    }
+
+    function render(isQuota = false) {
+      document.getElementById("turnValue").textContent = state.turn;
+      document.getElementById("utilityValue").textContent = state.totalReward.toFixed(1);
+      document.getElementById("ctrValue").textContent =
+        state.turn ? Math.round(state.clicks / state.turn * 100) + "%" : "0%";
+
+      const untilQuota = state.turn === 0 ? 20 : 20 - (state.turn % 20);
+      document.getElementById("quotaValue").textContent = untilQuota + "회";
+
+      renderEvent(isQuota);
+      renderTopics();
+      renderLog();
+      renderAdmission();
+      drawChart();
+    }
+
+    function renderEvent(isQuota) {
+      const box = document.getElementById("eventBox");
+      if (state.turn === 0) {
+        box.className = "current-event";
+        box.innerHTML = "<b>시뮬레이션 준비 완료</b><br>버튼을 눌러 첫 추천을 시작하세요. 모든 주제는 최소 1회씩 탐색한 뒤 UCB1 점수로 비교됩니다.";
+        return;
+      }
+
+      const last = state.history[state.history.length - 1];
+      box.className = "current-event" + (last.isQuota ? " quota" : "");
+      const title = last.isQuota ? "쿼터 발동: 새 탐색 기회 제공" : "UCB1 기반 추천 완료";
+      const clickText = last.clicked ? "클릭함" : "클릭하지 않음";
+      box.innerHTML = `
+        <b>${title}</b><br>
+        <strong>${last.topic}</strong> 추천 · ${clickText} · 시청 ${Math.round(last.watchRatio * 100)}% ·
+        이번 효용 <strong>${last.reward.toFixed(2)}</strong>
+      `;
+    }
+
+    function renderTopics() {
+      const maxCount = Math.max(1, ...state.topicData.map(item => item.count));
+      document.getElementById("topicList").innerHTML = state.topicData.map(item => {
+        const mean = item.count ? item.rewardSum / item.count : 0;
+        const percent = item.count / maxCount * 100;
+        return `
+          <div class="topic-row">
+            <span class="topic-name">${item.name}</span>
+            <div class="bar"><i style="width:${percent}%; background:${item.color}"></i></div>
+            <small>${item.count}회 · ${mean.toFixed(2)}</small>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderLog() {
+      const list = document.getElementById("logList");
+      if (!state.history.length) return;
+
+      list.innerHTML = [...state.history].reverse().slice(0, 9).map(entry => `
+        <li>
+          <span class="turn">#${entry.turn}</span>
+          <span><strong>${entry.topic}</strong> · ${entry.clicked ? "클릭" : "미클릭"} · 시청 ${Math.round(entry.watchRatio * 100)}%</span>
+          <span class="badge ${entry.isQuota ? "quota" : ""}">${entry.isQuota ? "쿼터" : "UCB1"}</span>
+        </li>
+      `).join("");
+    }
+
+    function renderAdmission() {
+      const exposedPaths = state.topicData.filter(item => item.count > 0).length;
+      const utilityScore = Math.round(state.totalReward * 100);
+
+      document.getElementById("admissionUtility").textContent = utilityScore + "점";
+      document.getElementById("pathwayValue").textContent = exposedPaths + " / 6";
+      document.getElementById("quotaCount").textContent = state.quotaCount + "회";
+
+      const meaning = document.getElementById("meaningText");
+      if (state.turn === 0) {
+        meaning.textContent = "아직 입학 자료가 없습니다. 추천을 실행하면 누적된 반응을 바탕으로 입시 공리주의 해석이 나타납니다.";
+      } else if (state.quotaCount === 0) {
+        meaning.innerHTML = `<strong>현재 해석:</strong> 높은 만족을 보이는 경로에 더 많은 기회가 배정되어 총효용은 빠르게 증가합니다. 다만 ${20 - (state.turn % 20 || 20)}회 뒤 쿼터가 작동해 덜 알려진 경로도 평가합니다.`;
+      } else {
+        meaning.innerHTML = `<strong>현재 해석:</strong> 총효용 ${utilityScore}점을 확보하면서, 쿼터가 ${state.quotaCount}번 작동했습니다. 이는 인기 전공이나 이미 유리한 학생만 반복 선발하는 결과를 줄이고, 잠재력이 아직 충분히 측정되지 않은 경로에도 입학·탐색 기회를 주는 장치입니다.`;
+      }
+    }
+
+    function drawChart() {
+      const canvas = document.getElementById("chart");
+      const ctx = canvas.getContext("2d");
+      const rect = canvas.getBoundingClientRect();
+      const ratio = window.devicePixelRatio || 1;
+      canvas.width = rect.width * ratio;
+      canvas.height = rect.height * ratio;
+      ctx.scale(ratio, ratio);
+
+      const w = rect.width;
+      const h = rect.height;
+      const pad = { left: 43, right: 18, top: 20, bottom: 30 };
+      const graphW = w - pad.left - pad.right;
+      const graphH = h - pad.top - pad.bottom;
+
+      ctx.clearRect(0, 0, w, h);
+      ctx.font = "12px Arial";
+      ctx.fillStyle = "#75839b";
+      ctx.strokeStyle = "#e6ebf4";
+      ctx.lineWidth = 1;
+
+      const cumulative = [];
+      let sum = 0;
+      state.history.forEach(entry => {
+        sum += entry.reward;
+        cumulative.push(sum);
+      });
+      const maxY = Math.max(2, ...cumulative) * 1.1;
+
+      for (let i = 0; i <= 4; i++) {
+        const y = pad.top + graphH - graphH * i / 4;
+        ctx.beginPath();
+        ctx.moveTo(pad.left, y);
+        ctx.lineTo(w - pad.right, y);
+        ctx.stroke();
+        ctx.fillText((maxY * i / 4).toFixed(1), 6, y + 4);
+      }
+
+      if (cumulative.length > 0) {
+        const xFor = i => pad.left + (cumulative.length === 1 ? graphW / 2 : i / (cumulative.length - 1) * graphW);
+        const yFor = value => pad.top + graphH - value / maxY * graphH;
+
+        ctx.beginPath();
+        cumulative.forEach((value, i) => {
+          const x = xFor(i), y = yFor(value);
+          i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        });
+        ctx.lineTo(xFor(cumulative.length - 1), pad.top + graphH);
+        ctx.lineTo(xFor(0), pad.top + graphH);
+        ctx.closePath();
+        ctx.fillStyle = "rgba(53,105,232,.12)";
+        ctx.fill();
+
+        ctx.beginPath();
+        cumulative.forEach((value, i) => {
+          const x = xFor(i), y = yFor(value);
+          i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        });
+        ctx.strokeStyle = "#3569e8";
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        state.history.forEach((entry, i) => {
+          if (entry.isQuota) {
+            const x = xFor(i), y = yFor(cumulative[i]);
+            ctx.beginPath();
+            ctx.arc(x, y, 5, 0, Math.PI * 2);
+            ctx.fillStyle = "#f28b36";
+            ctx.fill();
+          }
+        });
+      }
+
+      ctx.fillStyle = "#75839b";
+      ctx.fillText("추천 횟수", w - 62, h - 8);
+      ctx.save();
+      ctx.translate(13, 90);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText("누적 효용", 0, 0);
+      ctx.restore();
+    }
+
+    function startAuto() {
+      if (timer) return;
+      playBtn.textContent = "❚❚ 일시정지";
+      timer = setInterval(recommendOnce, Number(speedRange.value));
+    }
+
+    function stopAuto() {
+      if (timer) clearInterval(timer);
+      timer = null;
+      playBtn.textContent = "▶ 자동 실행";
+    }
+
+    playBtn.addEventListener("click", () => timer ? stopAuto() : startAuto());
+    stepBtn.addEventListener("click", recommendOnce);
+    resetBtn.addEventListener("click", resetState);
+    speedRange.addEventListener("input", () => {
+      if (timer) {
+        stopAuto();
+        startAuto();
+      }
+    });
+    window.addEventListener("resize", drawChart);
+
+    resetState();
+  </script>
+</body>
+</html>
